@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Student Grade App</title>
+    <style>
+        button {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Student Grade App</h1>
+        <p>
+            Web App
+        </p>
+    </header>
+    <main>
+        <section>
+            <h2>Find a Student</h2>
+            <form id="GetStudent">
+                <input type="number" placeholder="CWID" name="cwid" value="" maxlength="5">
+                <button type="button" data-action="getStudent" data-form="GetStudent">Go!</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Find All Students</h2>
+            <form id="GetAllStudents">
+                <button type="button" data-action="getAllStudents" data-form="GetAllStudents">Go!</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Create a Student</h2>
+            <form id="CreateStudent">
+                <input type="text" name="Name" placeholder="NAME" value="">
+                <button type="button" data-action="createStudent" data-form="CreateStudent">Go!</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Update a Student</h2>
+            <form id="UpdateStudent">
+                <input type="number" name="cwid" value="" placeholder="CWID" maxlength="5">
+                <input type="text" name="Name" placeholder="Full Name" maxlength="100">
+                <button type="button" data-action="updateStudent" data-form="UpdateStudent">Go!</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Delete a Student</h2>
+            <form id="DeleteStudent">
+                <input type="number" name="cwid" placeholder="CWID" value="" maxlength="5">
+                <button type="button" data-action="deleteStudent" data-form="DeleteStudent">Go!</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Find a Grade</h2>
+            <form id="FindGrade">
+                <input type="text" name="cwid" value="" placeholder="CWID" maxlength="5">
+                <input type="text" name="hwid" placeholder="Homework ID">
+                <button type="button" data-action="findGrade" data-form="FindGrade">Go!</button>
+            </form>
+            <h2>Update Grade</h2>
+            <form id="UpdateGrade">
+                <input type="text" name="cwid" value="" placeholder="CWID" maxlength="5">
+                <input type="text" name="hwid" placeholder="Homework ID">
+                <input type="number" name="grade" value="" placeholder="GRADE">
+                <button type="button" data-action="updateGrade" data-form="UpdateGrade">Go!</button>
+            </form>
+        </section>
+
+        <section>
+            <h1>RESET DATA</h1>
+            <form id="ResetData">
+                <button type="button" data-action="resetData">Go!</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Test Results...</h2>
+            <div id="TestResults">
+
+            </div>
+        </section>
+    </main>
+    <script>
+
+        // Function to actually change what's on the screen
+        function postResult(data) {
+            console.log(data);
+            document.querySelector('#TestResults').innerHTML = '';
+            let listTemp = `<p><strong>Name</strong>: ${data.name}, <strong>cwid</strong>: ${data.cwid}</p>`;
+            document.querySelector('#TestResults').insertAdjacentHTML('afterbegin', listTemp);
+        }
+
+        function postResultGrade(data) {
+            console.log(data);
+            document.querySelector('#TestResults').innerHTML = '';
+            let listTemp = `<p><strong>Name</strong>: ${data.name}, 
+            <strong>cwid</strong>: ${data.cwid} <strong>HW</strong>: ${data.grade}</p>`;
+            document.querySelector('#TestResults').insertAdjacentHTML('afterbegin', listTemp);
+        }
+
+        
+
+        function postResultAll(data) {
+            for (let i in data) {
+                let listTemp = `<p><strong>Name</strong>: ${data[i].name}, <strong>cwid</strong>: ${data[i].cwid}</p>`;
+                document.querySelector('#TestResults').insertAdjacentHTML('afterbegin', listTemp);
+                
+            }
+        }
+
+
+
+        function postResultStudent(data) {
+            document.querySelector('#TestResults').innerHTML = '';
+                let listTemp = `<p><strong>STUDENT</strong>: ${data.name} <strong>CWID</strong>: ${data.cwid}
+                <p><strong>GPA</strong>: ${data.gpa} <p><strong>ASSIGNMENTS</strong>:
+                <p><strong>HW1</strong>: ${data.grades.hw1} <strong>HW2</strong>: ${data.grades.hw2}
+                <p><strong>HW3</strong>: ${data.grades.hw3} <strong>HW4</strong>: ${data.grades.hw4}
+                <p><strong>GRADE AVERAGE</strong>: ${data.averageGrade}`;
+                document.querySelector('#TestResults').insertAdjacentHTML('afterbegin', listTemp);
+        }
+
+
+        // Give this the "id" value of any HTML form and it will return
+        // a native JavaScript object with all the form inputs. 
+        function getFormData(formId) {
+            const form = document.querySelector(`#${formId}`);
+
+            const formData = new FormData(form);
+
+            const entries = Object.fromEntries(formData.entries());
+
+            return entries;
+        }
+
+        // You can ignore this, only the _dataString() function uses it for conversion. 
+        function _encode(data) {
+            if (!data) return "";
+            return Object.keys(data).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k])).join('&');
+        }
+
+        // This is essential to turn our FormData object into a formUrlEncoded string wrapped in an object. 
+        function _dataString(data) {
+            let jsonData = JSON.stringify(data); // convert data to JSON
+            return _encode({
+                json: jsonData
+            });
+        }
+
+        // This code does our actual fetch HTTP request. 
+        async function getJsonResult(url, method, data) {
+            // url will be a string like 'api/student' or 'api/student.php?id=12345'
+            // method will be 1 of these strings: 'GET', 'POST', 'PUT', 'DELETE'
+            // data is the native JavaScript object we made from the form data
+            //This will get you started but you'll need to fix this code to make it really work. 
+            options = {};
+            options.method = method;
+            options.headers = { "content-Type": "application/x-www-form-urlencoded" };
+            //options.body = _dataString(data); // WARNING, THIS WON'T WORK FOR GET REQUESTS! Need If/Else
+            if (method == 'GET') {
+                options.body = null;
+            } else {
+                options.body = _dataString(data);
+                console.log(options.body);
+            }
+            console.log(options);
+
+            let request = await fetch(url, options); // WARNING: We need to use await here
+
+            let response = await request.json(); // WARNING: we need await AND we need to actualy do something with this JSON data
+
+            //return true; // What should we return instead?
+            return await response; 
+        }
+
+        // Object to hold our various async functions to send/receive data
+        const actions = {};
+
+        // Simple function to reset data
+        actions.resetData = async () => {
+
+            // Simple Fetch request to 'api/reset' or 'api/reset.php'
+            let result = await getJsonResult('api/reset','GET')
+        };
+
+        // Simple function to get 1 student's data
+        actions.getStudent = async () => {
+
+            // 1.  Get form data as JavaScript object
+            let formData = getFormData('GetStudent', 'GET');
+
+            // 2. Get Student CWID from form data
+            let cwid = formData.cwid;
+
+            // 3. Create HTTP GET request via fetch() to 'api/student?id={CWID}'—use await!
+            let result = await getJsonResult(`api/student?id=${cwid}`, 'GET', formData);
+            console.log(result);
+            // 4. Do something with result (maybe use postResult();)
+            let average = (Number(result.grades.hw1) + Number(result.grades.hw2) + Number(result.grades.hw3) + Number(result.grades.hw4)) / 4;
+            if(average >= 89.5) {
+                result.letterGrade = 'A';
+                result.gpa = 4.0;
+            } else if (average >= 79.5){
+                result.letterGrade = 'B';
+                result.gpa = 3.0;
+            } else if (average >= 69.5){
+                result.letterGrade = 'C';
+                result.gpa = 2.0;
+            } else if (average >= 59.5){
+                result.letterGrade = 'D';
+                result.gpa = 1.0;
+            } else {
+                result.letterGrade = 'F';
+                result.gpa = 0;
+            }
+            
+            layOut = {
+                
+                name: result.name, cwid: result.cwid, gpa: result.gpa, 
+                grades: result.grades, averageGrade: average + '% = ' + result.letterGrade
+            }
+            //postResult(layout);
+            postResultStudent(layOut);
+
+
+        };
+
+        // Add more with the same syntax: actions.yourFunction = ()=>{}; (use async for async functions)
+
+        actions.getAllStudents = async () => {
+            // get all students
+            let result = await getJsonResult(`api/student`, 'GET');
+            
+            let allStudents = [];
+            for (let i = 0; i < result.items.length; i++) {
+                let tempName = result.items[i].name;
+                let tempCwid = result.items[i].cwid;
+                let layOut = {
+                    name: tempName, cwid: tempCwid
+                };
+                allStudents.push(layOut)
+            }
+            postResultAll(allStudents);
+        };
+
+        actions.createStudent = async () => {
+            // Create a Student
+            // 1.  Get form data as JavaScript object
+            let formData = getFormData('CreateStudent', 'GET');
+            let create = await getJsonResult(`api/student`, 'POST', {name: formData.Name});
+            let layOut = {name: formData.Name, cwid: create.cwid};
+            postResult(layOut);
+        };
+
+        actions.updateStudent = async () => {
+            // Update a Student
+            let formData = getFormData('UpdateStudent', 'GET');
+            update = {cwid: formData.cwid, name: formData.Name};
+            let create = await getJsonResult(`api/student`, 'PUT', update);
+            postResult(create);
+
+        };
+
+        actions.deleteStudent = async () => {
+            // Delete a Student
+            let formData = getFormData('DeleteStudent', 'GET');
+            console.log(formData)
+            let cwid = formData.cwid;
+            console.log(cwid);
+            let remove = await getJsonResult(`api/student/${cwid}`, 'DELETE', formData);
+            console.log(remove);
+            //postResult(remove);
+
+        };
+
+        actions.findGrade = async () => {
+            // Find a students grade
+            let formData = getFormData('FindGrade', 'GET');
+            let cwid = formData.cwid;
+            let names = await getJsonResult(`api/student?id=${cwid}`, 'GET', formData);
+            console.log(name);
+            console.log(formData);
+            let search = await getJsonResult(`api/grade/?id=${cwid}`, 'GET', formData);
+            let layout = {name: names.name, cwid: formData.cwid, grade: search.grade};
+            console.log(layout);
+            console.log(search);
+            postResultGrade(layout);
+        }
+
+        actions.updateGrade = async () => {
+            // Update a students grade
+            let formData = getFormData('UpdateGrade', 'GET');
+            let newGrade = {cwid: formData.cwid, hwid: formData.hwid, grade: formData.grade};
+            console.log(newGrade);
+            let changeGrade = await getJsonResult(`api/grade`, 'PUT', newGrade);
+            console.log(changeGrade);
+            postResult(changeGrade);
+        }
+
+
+        // Here's our click handler, it runs on ANY click but will only invoke one of our 
+        // actions if the thing we clicked on has a "data-action" attribute and its value is
+        // the name of a property of the actions object. 
+        document.body.addEventListener("click", (e) => {
+
+            // 1. get the value of the clicked item's "data-action" attribute
+
+            let action = e.target.dataset.action ?? null;
+
+            if (actions[action]) {
+
+                actions[action](e.target);
+
+                // 2. Use the string to invoke the correct function with array[syntax]
+            }
+
+        });
+    </script>
+</body>
+
+</html>
